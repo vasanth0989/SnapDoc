@@ -4,7 +4,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
 import org.apache.poi.util.Units;
-import org.apache.poi.xwpf.usermodel.BreakType;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
@@ -17,12 +16,17 @@ public class SnapDocImageProcessor {
 	private FileOutputStream out=null;
 	private SnapDoc snapDoc= SnapDoc.getInstance();
 
-	public  void savetoDoc(String imageFile,String fileToSave,boolean isNewFile) throws Exception {
+	public  void savetoDoc(String imageFile,String fileToSave,boolean isNewFile,boolean appendFile) throws Exception {
 
 		if(isNewFile)
 		{
 			doc = new XWPFDocument();	
 		}  
+		if(appendFile)
+		{
+			doc = new XWPFDocument(new FileInputStream(fileToSave+SnapDocConstants.SNAPDOC_FILE_EXTENSION));
+		}
+		
 		XWPFParagraph p = doc.createParagraph();
 		XWPFRun r = p.createRun();
 		String imgFile=imageFile;

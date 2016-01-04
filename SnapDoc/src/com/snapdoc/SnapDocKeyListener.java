@@ -30,6 +30,8 @@ public class SnapDocKeyListener implements NativeKeyListener {
 	private SnapDoc snapDoc = SnapDoc.getInstance();
 	private SnapDocImageProcessor snapDocImageProcessor = new SnapDocImageProcessor();
 	private boolean isNewFile;
+	private boolean proceedFlag=false;
+	private boolean appendFile=false;
 	private BufferedReader bufferedReader = null;
 
 	public void nativeKeyPressed(NativeKeyEvent e) {
@@ -67,10 +69,13 @@ public class SnapDocKeyListener implements NativeKeyListener {
 				ImageIO.write(screenFullImage, format, new File(imgFileName));
 				try {
 
+
 					snapDocImageProcessor.savetoDoc(imgFileName,
 							snapDoc.getSnapdocPath() + "/" + fileName,
-							isNewFile);
+							isNewFile,appendFile);
 					isNewFile = false;
+					appendFile=false;
+
 
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
@@ -80,7 +85,8 @@ public class SnapDocKeyListener implements NativeKeyListener {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-		} else if (e.getKeyCode() == NativeKeyEvent.VC_CONTROL_L
+		}	
+		else if (e.getKeyCode() == NativeKeyEvent.VC_CONTROL_L
 				|| e.getKeyCode() == NativeKeyEvent.VC_V
 				|| e.getKeyCode() == NativeKeyEvent.VC_SHIFT_L) {
 			keyCount++;
@@ -94,26 +100,68 @@ public class SnapDocKeyListener implements NativeKeyListener {
 			snapDocBufferStr = snapDocBufferStr.replace(" ", "");
 			if (Arrays.asList(SnapDocConstants.SNAPDOC_KEY_EVENTS).contains(
 					snapDocBufferStr.toString())) {
-				try {
-					System.out
-							.println("Please Enter the File Name you would like to create:");
-					bufferedReader = new BufferedReader(new InputStreamReader(
-							System.in));
-					fileName = bufferedReader.readLine();
-					isNewFile = true;
-					System.out
-							.println("That's it hit the prtscr button to capture screenshot!");
-				} catch (IOException ie) {
-					ie.printStackTrace();
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
+				getFileFromUser();
 
 			}
 			snapDocBuffer.delete(0, snapDocBuffer.length());
 			keyCount = 0;
 		}
 
+	}
+
+	private void getFileFromUser() {
+		try {
+			System.out
+			.println("Please Enter the File Name you would like to create:");
+			proceedFlag=false;
+			appendFile=false;
+			if(null==bufferedReader)
+			{
+				bufferedReader = new BufferedReader(new InputStreamReader(
+						System.in));
+			}
+			fileName = bufferedReader.readLine();
+			if(chekForExistingFile(fileName+".docx"))
+			{
+				System.out
+				.println("Oops! File name conflict, do you want to overwrite the existing file?");
+				System.out
+				.println("Please press y/n to proceed..");
+				String answer = bufferedReader.readLine();
+				if(answer.equalsIgnoreCase("y"))
+				{
+					proceedFlag=true;
+					isNewFile = true;	
+				}
+				else if(answer.equalsIgnoreCase("n"))
+				{
+					proceedFlag=true;
+					isNewFile = false;
+					appendFile=true;
+				}
+				else
+				{
+					System.out.println("Entered a invalid key, Please try again!");
+					getFileFromUser();
+				}
+
+			}
+			else
+			{
+				isNewFile = true;
+				proceedFlag=true;
+
+			}
+
+			if(proceedFlag)
+			{
+				System.out.println("That's it hit the prtscr button to capture screenshot!");
+			}
+		} catch (IOException ie) {
+			ie.printStackTrace();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 	}
 
 	public void nativeKeyTyped(NativeKeyEvent e) {
@@ -130,7 +178,7 @@ public class SnapDocKeyListener implements NativeKeyListener {
 			GlobalScreen.registerNativeHook();
 		} catch (NativeHookException ex) {
 			System.err
-					.println("There was a problem registering the native hook.");
+			.println("There was a problem registering the native hook.");
 			System.err.println(ex.getMessage());
 
 			System.exit(1);
@@ -145,6 +193,21 @@ public class SnapDocKeyListener implements NativeKeyListener {
 				e1.printStackTrace();
 			}
 		}
+	}
+
+	public boolean chekForExistingFile(String fileName)
+	{
+		boolean checkForExistingFile=false;
+		File file = new File(snapDoc.getSnapdocPath());
+		File [] files = file.listFiles();
+		for(File snapdocFile:files)
+		{
+			if(snapdocFile.getName().equalsIgnoreCase(fileName))
+			{
+				checkForExistingFile = true;
+			}
+		}
+		return checkForExistingFile;
 	}
 
 }
